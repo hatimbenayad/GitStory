@@ -1,4 +1,5 @@
 import { useCallback, useEffect } from 'react';
+import { ContributorView } from './components/ContributorView.js';
 import { HudOverlay } from './components/HudOverlay.js';
 import { LandingView } from './components/LandingView.js';
 import { ReplayView } from './components/ReplayView.js';
@@ -83,7 +84,8 @@ export function App() {
       <main className="stage-wrapper">
         {view === 'replay' && <ReplayView />}
         {view === 'treemap' && <TreemapView />}
-        {view !== 'replay' && view !== 'treemap' && (
+        {view === 'contributors' && <ContributorView />}
+        {view === 'arch' && (
           <div
             style={{
               height: '100%',

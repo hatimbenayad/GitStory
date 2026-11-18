@@ -13,3 +13,12 @@ export {
   type TreeLayoutFrame,
 } from './tree-layout.js';
 export { computeTreemapLayout, type TreemapRect } from './treemap-layout.js';
+export {
+  computeActiveContributors,
+  computeContributorStream,
+  getAuthorInitials,
+  type ActiveContributor,
+  type ContributorSeries,
+  type ContributorStreamData,
+  type StreamPoint,
+} from './contributor-layout.js';

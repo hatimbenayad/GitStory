@@ -16,3 +16,4 @@ One line per completed Bolt (plus Inception milestones and performance benchmark
 | Bolt-U7 | U7 | Done | 2026-11-18 | Documentary highlight detection (all 5 categories), tag chapters, opt-in zero-key `TemplateNarrationProvider` wired into timeline pacing & HUD (37 tests passing) |
 | Bolt-U10 | U10 | Done | 2026-11-18 | IndexedDB LRU cache (`idb`) keyed by repo+HEAD+options + dedicated Vite Web Worker offloading (`history.worker.ts`) (40 tests passing) |
 | Bolt-U8 | U8 | Done | 2026-11-18 | Animated squarified Treemap layout (`d3-hierarchy`) + `TreemapView` synchronized with timeline & palette (42 tests passing) |
+| Bolt-U9 | U9 | Done | 2026-11-18 | Contributor activity canvas (avatars gravitating toward touched files) + interactive centered streamgraph with bot filtering (45 tests passing) |
