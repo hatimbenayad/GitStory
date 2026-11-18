@@ -19,3 +19,5 @@ export {
   type ReplayEngineOptions,
   type RepoState,
 } from './replay.js';
+export { buildChapters, detectHighlights } from './highlights.js';
+export { TemplateNarrationProvider } from './narration.js';

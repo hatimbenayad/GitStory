@@ -1,6 +1,9 @@
 import { create } from 'zustand';
 import {
   ReplayEngine,
+  TemplateNarrationProvider,
+  buildChapters,
+  detectHighlights,
   validateHistory,
   type Chapter,
   type Highlight,
@@ -74,19 +77,7 @@ export interface StoryStoreState {
   setPacingMode: (mode: PacingMode) => void;
 }
 
-function buildBasicChapters(history: History): Chapter[] {
-  const indexByHash = new Map<string, number>();
-  history.events.forEach((e, i) => indexByHash.set(e.hash, i));
-  const chapters: Chapter[] = [];
-  for (const tag of history.tags) {
-    const eventIndex = indexByHash.get(tag.hash);
-    if (eventIndex !== undefined) {
-      chapters.push({ name: tag.name, hash: tag.hash, eventIndex, t: tag.t });
-    }
-  }
-  chapters.sort((a, b) => a.eventIndex - b.eventIndex || a.name.localeCompare(b.name));
-  return chapters;
-}
+const defaultNarrator = new TemplateNarrationProvider();
 
 function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
@@ -132,8 +123,8 @@ export const useStoryStore = create<StoryStoreState>((set, get) => ({
     }
 
     const history = validated.data;
-    const chapters = meta?.chapters ?? buildBasicChapters(history);
-    const highlights = meta?.highlights ?? [];
+    const chapters = meta?.chapters ?? buildChapters(history);
+    const highlights = meta?.highlights ?? detectHighlights(history);
     const narration = meta?.narration ?? [];
     const replayEngine = new ReplayEngine(history);
     const timeline = new TimelineEngine(history.events, {
@@ -191,7 +182,19 @@ export const useStoryStore = create<StoryStoreState>((set, get) => ({
   setColorblindSafe: (colorblindSafe) => set({ colorblindSafe }),
   setBotVisibility: (botVisibility) => set({ botVisibility }),
   setShowLabels: (showLabels) => set({ showLabels }),
-  setShowCaptions: (showCaptions) => set({ showCaptions }),
+  setShowCaptions(showCaptions) {
+    set({ showCaptions });
+    const { history, chapters, highlights, narration } = get();
+    if (showCaptions && history && narration.length === 0) {
+      void defaultNarrator
+        .generate({ repoName: history.repo.name, chapters, highlights })
+        .then((segments) => {
+          if (get().history === history) {
+            set({ narration: segments });
+          }
+        });
+    }
+  },
   setExportModalOpen: (exportModalOpen) => set({ exportModalOpen }),
 
   play() {

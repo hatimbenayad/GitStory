@@ -13,3 +13,4 @@ One line per completed Bolt (plus Inception milestones and performance benchmark
 | Bolt-U4 | U4 | Done | 2026-11-18 | `@gitstory/timeline` virtual clock, adaptive pacing (gap compression + highlight linger), constant mode, chapter jumps & deterministic export sampling (29 tests passing) |
 | Bolt-U5 | U5 | Done | 2026-11-18 | `@gitstory/layout` `StableTreeLayout` (zero unrelated-branch drift, rename glide tracking, Okabe-Ito palette) + PixiJS v8 WebGL `ReplayRenderer` with Canvas2D fallback (32 tests passing) |
 | Bolt-U6 | U6 | Done | 2026-11-18 | MVP complete! React+Vite+Zustand web shell, drag-drop `history.json`, File System Access API local folder loader, HUD, timeline controls, keyboard shortcuts, shareable URLs (34 tests passing) |
+| Bolt-U7 | U7 | Done | 2026-11-18 | Documentary highlight detection (all 5 categories), tag chapters, opt-in zero-key `TemplateNarrationProvider` wired into timeline pacing & HUD (37 tests passing) |
