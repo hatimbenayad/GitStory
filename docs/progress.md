@@ -9,3 +9,4 @@ One line per completed Bolt (plus Inception milestones and performance benchmark
 | Inception-2 | Specs | Done | 2026-11-18 | Created `spec.md`, `plan.md`, and `tasks.md` for all 15 units (`specs/u1`–`specs/u15`) |
 | Bolt-U1 | U1 | Done | 2026-11-18 | Monorepo scaffold + `@gitstory/core` types, JSON Schema v1, runtime validator, sanitize utils (13 tests passing) |
 | Bolt-U2 | U2 | Done | 2026-11-18 | `@gitstory/extractor` streaming git log parser (`--raw --numstat -z`), `.mailmap`, bot detection, tags + `gitstory` CLI (`extract`/`serve`) (23 tests passing) |
+| Bolt-U3 | U3 | Done | 2026-11-18 | `@gitstory/core` `ReplayEngine` with keyframe acceleration, rename ID preservation, empty-dir pruning & property-style scrub equivalence test (26 tests passing) |

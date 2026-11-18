@@ -9,3 +9,13 @@ export {
   stripControlChars,
 } from './sanitize.js';
 export { assertValidHistory, validateHistory } from './validate.js';
+export {
+  ReplayEngine,
+  applyCommitEvent,
+  cloneState,
+  createEmptyState,
+  type DirNode,
+  type FileNode,
+  type ReplayEngineOptions,
+  type RepoState,
+} from './replay.js';
