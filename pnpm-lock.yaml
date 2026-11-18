@@ -47,6 +47,9 @@ importers:
       '@gitstory/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@gitstory/exporter':
+        specifier: workspace:*
+        version: link:../../packages/exporter
       '@gitstory/layout':
         specifier: workspace:*
         version: link:../../packages/layout
@@ -86,6 +89,15 @@ importers:
         version: 6.4.6(@types/node@22.20.5)
 
   packages/core: {}
+
+  packages/exporter:
+    dependencies:
+      gifenc:
+        specifier: ^1.0.3
+        version: 1.0.3
+      mp4-muxer:
+        specifier: ^5.1.4
+        version: 5.2.2
 
   packages/extractor:
     dependencies:
@@ -1180,6 +1192,10 @@ packages:
     resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
     dev: true
 
+  /@types/dom-webcodecs@0.1.19:
+    resolution: {integrity: sha512-+yFUIDUaASFz0vQpWBErPxun/Lb+F0TdrlTsj50gm7K797YzEx2TmV6fEiwciHyFNghlZYPgQXH5qRcwMHcJFQ==}
+    dev: false
+
   /@types/earcut@3.2.4:
     resolution: {integrity: sha512-I688mi107oflZOpzhs4EwasCN4ycLlZHf7XAGhM6EQIHEJkRTEuTL08lemIZOQ1YAACJoNoCzAiSDCJujpJLHA==}
     deprecated: This is a stub types definition. earcut provides its own type definitions, so you do not need this installed.
@@ -1213,6 +1229,10 @@ packages:
     resolution: {integrity: sha512-N0rFCuH9YoxG9/m61l9MfpJKfmLOVU0em7ipIz6TRgSSkvReLB9vL85GB+yr8Bs5leqpvg96JSwF4ZS1s4viQg==}
     dependencies:
       csstype: 3.2.4
+
+  /@types/wicg-file-system-access@2020.9.8:
+    resolution: {integrity: sha512-ggMz8nOygG7d/stpH40WVaNvBwuyYLnrg5Mbyf6bmsj/8+gb6Ei4ZZ9/4PNpcPNTT8th9Q8sM8wYmWGjMWLX/A==}
+    dev: false
 
   /@typescript-eslint/eslint-plugin@8.73.0(@typescript-eslint/parser@8.73.0)(eslint@9.39.5)(typescript@5.9.3):
     resolution: {integrity: sha512-UkygMFer53Yzn29MCYFTHf34hGXf5KJhiDWfIm1tXtXRrym1CS6l5H9Y3yCtPWChpC0/f93H88gdj8tN0dd4kw==}
@@ -2105,6 +2125,10 @@ packages:
       es-object-atoms: 1.1.2
     dev: false
 
+  /gifenc@1.0.3:
+    resolution: {integrity: sha512-xdr6AdrfGBcfzncONUOlXMBuc5wJDtOueE3c5rdG0oNgtINLD+f2iFZltrBRZYzACRbKr+mSVU/x98zv2u3jmw==}
+    dev: false
+
   /gifuct-js@2.1.2:
     resolution: {integrity: sha512-rI2asw77u0mGgwhV3qA+OEgYqaDn5UNqgs+Bx0FGwSpuqfYn+Ir6RQY5ENNQ8SbIiG/m5gVa7CD5RriO4f4Lsg==}
     dependencies:
@@ -2367,6 +2391,14 @@ packages:
     resolution: {integrity: sha512-1oPjfuLQa2caorJUM8HV8lGgWCc0qqAO1MNv/k05G4qslmsndV/5WdNZrqCiyqiz3wohia2Ij2B7w2Dr7/IyrA==}
     dependencies:
       minimist: 1.2.8
+    dev: false
+
+  /mp4-muxer@5.2.2:
+    resolution: {integrity: sha512-dhozjTywI0h2qFzeShagt8YYw811fh1XlwiDCE2f6Aeqf6xG2CyuShoSa5E0AZDO8pPF0JOZ3wOmWBNWIGdSpQ==}
+    deprecated: This library is superseded by Mediabunny. Please migrate to it.
+    dependencies:
+      '@types/dom-webcodecs': 0.1.19
+      '@types/wicg-file-system-access': 2020.9.8
     dev: false
 
   /ms@2.1.3:

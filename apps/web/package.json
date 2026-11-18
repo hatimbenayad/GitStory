@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@gitstory/core": "workspace:*",
+    "@gitstory/exporter": "workspace:*",
     "@gitstory/layout": "workspace:*",
     "@gitstory/timeline": "workspace:*",
     "idb": "^8.0.2",

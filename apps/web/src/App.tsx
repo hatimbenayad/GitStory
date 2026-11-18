@@ -1,5 +1,6 @@
 import { useCallback, useEffect } from 'react';
 import { ContributorView } from './components/ContributorView.js';
+import { ExportModal } from './components/ExportModal.js';
 import { HudOverlay } from './components/HudOverlay.js';
 import { LandingView } from './components/LandingView.js';
 import { ReplayView } from './components/ReplayView.js';
@@ -80,7 +81,7 @@ export function App() {
 
   return (
     <div className="app-shell">
-      <Toolbar />
+      <Toolbar showExportButton />
       <main className="stage-wrapper">
         {view === 'replay' && <ReplayView />}
         {view === 'treemap' && <TreemapView />}
@@ -100,6 +101,7 @@ export function App() {
         <HudOverlay />
       </main>
       <TimelineBar />
+      <ExportModal />
     </div>
   );
 }
