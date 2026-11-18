@@ -14,7 +14,8 @@
   ],
   "dependencies": {
     "@gitstory/core": "workspace:*",
-    "@gitstory/extractor": "workspace:*"
+    "@gitstory/extractor": "workspace:*",
+    "@gitstory/layout": "workspace:*"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",

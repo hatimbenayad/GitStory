@@ -22,3 +22,21 @@ export {
   type ContributorStreamData,
   type StreamPoint,
 } from './contributor-layout.js';
+export {
+  buildArchGraph,
+  detectArchLanguage,
+  diffArchGraphs,
+  extractModuleImports,
+  layoutArchDiff,
+  type ArchDiff,
+  type ArchDiffEdge,
+  type ArchDiffNode,
+  type ArchEdge,
+  type ArchGraph,
+  type ArchLanguage,
+  type ArchNode,
+  type CustomImportExtractor,
+  type DiffStatus,
+  type PositionedArchEdge,
+  type PositionedArchNode,
+} from './arch-graph.js';

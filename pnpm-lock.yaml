@@ -41,6 +41,9 @@ importers:
       '@gitstory/extractor':
         specifier: workspace:*
         version: link:../../packages/extractor
+      '@gitstory/layout':
+        specifier: workspace:*
+        version: link:../../packages/layout
 
   apps/server:
     dependencies:

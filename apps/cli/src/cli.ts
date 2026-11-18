@@ -3,7 +3,8 @@ import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { extractHistory } from '@gitstory/extractor';
+import { extractHistory, readRepoFilesAtRef } from '@gitstory/extractor';
+import { buildArchGraph, diffArchGraphs } from '@gitstory/layout';
 import { startLocalServer } from './serve.js';
 
 const HELP_TEXT = `GitStory CLI — Turn any Git repository into a documentary.
@@ -12,9 +13,10 @@ Usage:
   gitstory <repo-path> [options]
   gitstory extract <repo-path> [-o history.json] [--full-history]
   gitstory serve <repo-path> [--port 4173] [--full-history]
+  gitstory arch <repo-path> <refA> <refB> [-o arch-diff.json]
 
 Options:
-  -o, --output <file>   Output path for history.json (default: history.json)
+  -o, --output <file>   Output path (default: history.json or arch-diff.json)
   --full-history        Include all branch commits (default: first-parent only)
   --max-commits <n>     Limit extracted commits to the most recent N
   --serve               Start local web server preloaded with this repository
@@ -43,12 +45,37 @@ export async function runCli(argv: string[]): Promise<number> {
 
   let command = 'extract';
   let repoArg = positionals[0]!;
-  if (repoArg === 'extract' || repoArg === 'serve') {
+  if (repoArg === 'extract' || repoArg === 'serve' || repoArg === 'arch') {
     command = repoArg;
     repoArg = positionals[1] ?? '.';
   }
   if (values.serve) {
     command = 'serve';
+  }
+
+  if (command === 'arch') {
+    const refA = positionals[2];
+    const refB = positionals[3];
+    if (!refA || !refB) {
+      process.stderr.write('Usage: gitstory arch <repo-path> <refA> <refB> [-o arch-diff.json]\n');
+      return 1;
+    }
+    try {
+      const [filesA, filesB] = await Promise.all([
+        readRepoFilesAtRef(repoArg, refA),
+        readRepoFilesAtRef(repoArg, refB),
+      ]);
+      const diff = diffArchGraphs(buildArchGraph(refA, filesA), buildArchGraph(refB, filesB));
+      const outPath = resolve(values.output ?? 'arch-diff.json');
+      writeFileSync(outPath, `${JSON.stringify(diff, null, 2)}\n`, 'utf8');
+      process.stdout.write(
+        `Wrote ${outPath} (+${diff.summary.addedNodes} -${diff.summary.removedNodes} ~${diff.summary.changedNodes} modules)\n`,
+      );
+      return 0;
+    } catch (err) {
+      process.stderr.write(`GitStory arch error: ${err instanceof Error ? err.message : String(err)}\n`);
+      return 1;
+    }
   }
 
   const firstParent = !values['full-history'];

@@ -1,4 +1,5 @@
 import { useCallback, useEffect } from 'react';
+import { ArchDiffView } from './components/ArchDiffView.js';
 import { ContributorView } from './components/ContributorView.js';
 import { ExportModal } from './components/ExportModal.js';
 import { HudOverlay } from './components/HudOverlay.js';
@@ -134,19 +135,8 @@ export function App() {
         {view === 'replay' && <ReplayView />}
         {view === 'treemap' && <TreemapView />}
         {view === 'contributors' && <ContributorView />}
-        {view === 'arch' && (
-          <div
-            style={{
-              height: '100%',
-              display: 'grid',
-              placeItems: 'center',
-              color: '#94a3b8',
-            }}
-          >
-            {view} view coming in next Bolt
-          </div>
-        )}
-        <HudOverlay />
+        {view === 'arch' && <ArchDiffView />}
+        {view !== 'arch' && <HudOverlay />}
       </main>
       <TimelineBar />
       <ExportModal />

@@ -62,4 +62,32 @@ describe('gitstory CLI', () => {
       server.close();
     }
   });
+
+  it('computes architecture dependency diff between two refs via `gitstory arch` (FR-24)', async () => {
+    const repoDir = createFixtureRepo();
+    writeFileSync(join(repoDir, 'a.ts'), 'export const x = 1;\n');
+    writeFileSync(join(repoDir, 'index.ts'), "import { x } from './a.js';\nexport const y = x;\n");
+    execFileSync('git', ['add', '.'], { cwd: repoDir });
+    execFileSync('git', ['commit', '-m', 'v1'], { cwd: repoDir });
+    execFileSync('git', ['tag', 'v1'], { cwd: repoDir });
+
+    writeFileSync(join(repoDir, 'b.ts'), 'export const z = 2;\n');
+    writeFileSync(
+      join(repoDir, 'index.ts'),
+      "import { x } from './a.js';\nimport { z } from './b.js';\nexport const y = x + z;\n",
+    );
+    execFileSync('git', ['add', '.'], { cwd: repoDir });
+    execFileSync('git', ['commit', '-m', 'v2'], { cwd: repoDir });
+    execFileSync('git', ['tag', 'v2'], { cwd: repoDir });
+
+    const outPath = join(repoDir, 'arch-diff.json');
+    const code = await runCli(['arch', repoDir, 'v1', 'v2', '-o', outPath]);
+    expect(code).toBe(0);
+
+    const diff = JSON.parse(readFileSync(outPath, 'utf8')) as {
+      summary: { addedNodes: number; changedNodes: number };
+    };
+    expect(diff.summary.addedNodes).toBe(1);
+    expect(diff.summary.changedNodes).toBe(1);
+  });
 });
