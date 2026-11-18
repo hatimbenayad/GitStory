@@ -11,3 +11,4 @@ One line per completed Bolt (plus Inception milestones and performance benchmark
 | Bolt-U2 | U2 | Done | 2026-11-18 | `@gitstory/extractor` streaming git log parser (`--raw --numstat -z`), `.mailmap`, bot detection, tags + `gitstory` CLI (`extract`/`serve`) (23 tests passing) |
 | Bolt-U3 | U3 | Done | 2026-11-18 | `@gitstory/core` `ReplayEngine` with keyframe acceleration, rename ID preservation, empty-dir pruning & property-style scrub equivalence test (26 tests passing) |
 | Bolt-U4 | U4 | Done | 2026-11-18 | `@gitstory/timeline` virtual clock, adaptive pacing (gap compression + highlight linger), constant mode, chapter jumps & deterministic export sampling (29 tests passing) |
+| Bolt-U5 | U5 | Done | 2026-11-18 | `@gitstory/layout` `StableTreeLayout` (zero unrelated-branch drift, rename glide tracking, Okabe-Ito palette) + PixiJS v8 WebGL `ReplayRenderer` with Canvas2D fallback (32 tests passing) |
