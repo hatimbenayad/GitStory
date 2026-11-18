@@ -2,9 +2,13 @@ import { create } from 'zustand';
 import {
   ReplayEngine,
   TemplateNarrationProvider,
+  aggregateHistory,
   buildChapters,
+  collapseRepoState,
   detectHighlights,
+  resolveLargeRepoPolicy,
   validateHistory,
+  type AggregationGranularity,
   type Chapter,
   type Highlight,
   type History,
@@ -14,7 +18,10 @@ import {
 import { TimelineEngine, type PacingMode, type TimelineSnapshot } from '@gitstory/timeline';
 import { parseUrlState, type BotVisibility, type ViewMode } from '../lib/urlState.js';
 
+export type GranularityChoice = 'auto' | AggregationGranularity;
+
 export interface StoryStoreState {
+  rawHistory: History | null;
   history: History | null;
   replayEngine: ReplayEngine | null;
   timeline: TimelineEngine | null;
@@ -23,6 +30,13 @@ export interface StoryStoreState {
   chapters: Chapter[];
   highlights: Highlight[];
   narration: NarrationSegment[];
+
+  // Large-repo scaling (U11 / FR-23)
+  granularityChoice: GranularityChoice;
+  effectiveGranularity: AggregationGranularity;
+  maxDepth: number;
+  maxNodes: number;
+  largeRepoActive: boolean;
 
   // UI state
   view: ViewMode;
@@ -51,6 +65,11 @@ export interface StoryStoreState {
       narration?: NarrationSegment[];
     },
   ) => boolean;
+  setLargeRepoOptions: (opts: {
+    granularityChoice?: GranularityChoice;
+    maxDepth?: number;
+    maxNodes?: number;
+  }) => void;
   resetToLanding: () => void;
   setView: (view: ViewMode) => void;
   setError: (error: string | null) => void;
@@ -87,7 +106,18 @@ function prefersReducedMotion(): boolean {
 const initialUrl =
   typeof window !== 'undefined' ? parseUrlState(window.location.search) : {};
 
+function getViewState(
+  engine: ReplayEngine,
+  index: number,
+  maxDepth: number,
+  maxNodes: number,
+): RepoState {
+  const raw = engine.getStateAt(index);
+  return collapseRepoState(raw, { maxDepth, maxNodes });
+}
+
 export const useStoryStore = create<StoryStoreState>((set, get) => ({
+  rawHistory: null,
   history: null,
   replayEngine: null,
   timeline: null,
@@ -96,6 +126,12 @@ export const useStoryStore = create<StoryStoreState>((set, get) => ({
   chapters: [],
   highlights: [],
   narration: [],
+
+  granularityChoice: 'auto',
+  effectiveGranularity: 'commit',
+  maxDepth: Infinity,
+  maxNodes: 20000,
+  largeRepoActive: false,
 
   view: initialUrl.view ?? 'replay',
   loading: false,
@@ -122,9 +158,23 @@ export const useStoryStore = create<StoryStoreState>((set, get) => ({
       return false;
     }
 
-    const history = validated.data;
-    const chapters = meta?.chapters ?? buildChapters(history);
-    const highlights = meta?.highlights ?? detectHighlights(history);
+    const rawHistory = validated.data;
+    const policy = resolveLargeRepoPolicy(rawHistory.events.length, {
+      granularity: get().granularityChoice,
+    });
+    const history =
+      policy.granularity === 'commit'
+        ? rawHistory
+        : aggregateHistory(rawHistory, { granularity: policy.granularity });
+
+    const chapters =
+      policy.granularity === 'commit' && meta?.chapters
+        ? meta.chapters
+        : buildChapters(history);
+    const highlights =
+      policy.granularity === 'commit' && meta?.highlights
+        ? meta.highlights
+        : detectHighlights(history);
     const narration = meta?.narration ?? [];
     const replayEngine = new ReplayEngine(history);
     const timeline = new TimelineEngine(history.events, {
@@ -138,9 +188,15 @@ export const useStoryStore = create<StoryStoreState>((set, get) => ({
     }
 
     const snapshot = timeline.getSnapshot();
-    const currentState = replayEngine.getStateAt(snapshot.eventIndex);
+    const currentState = getViewState(
+      replayEngine,
+      snapshot.eventIndex,
+      policy.maxDepth,
+      policy.maxNodes,
+    );
 
     set({
+      rawHistory,
       history,
       replayEngine,
       timeline,
@@ -149,6 +205,10 @@ export const useStoryStore = create<StoryStoreState>((set, get) => ({
       chapters,
       highlights,
       narration,
+      effectiveGranularity: policy.granularity,
+      maxDepth: policy.maxDepth,
+      maxNodes: policy.maxNodes,
+      largeRepoActive: policy.active,
       error: null,
       loading: false,
       loadingMessage: '',
@@ -158,9 +218,67 @@ export const useStoryStore = create<StoryStoreState>((set, get) => ({
     return true;
   },
 
+  setLargeRepoOptions(opts) {
+    const state = get();
+    const granularityChoice = opts.granularityChoice ?? state.granularityChoice;
+    const rawHistory = state.rawHistory;
+    if (!rawHistory) {
+      set({
+        granularityChoice,
+        ...(opts.maxDepth !== undefined ? { maxDepth: opts.maxDepth } : {}),
+        ...(opts.maxNodes !== undefined ? { maxNodes: opts.maxNodes } : {}),
+      });
+      return;
+    }
+
+    const policy = resolveLargeRepoPolicy(rawHistory.events.length, {
+      granularity: granularityChoice,
+      ...(opts.maxDepth !== undefined ? { maxDepth: opts.maxDepth } : {}),
+      ...(opts.maxNodes !== undefined ? { maxNodes: opts.maxNodes } : {}),
+    });
+
+    const history =
+      policy.granularity === 'commit'
+        ? rawHistory
+        : aggregateHistory(rawHistory, { granularity: policy.granularity });
+    const chapters = buildChapters(history);
+    const highlights = detectHighlights(history);
+    const replayEngine = new ReplayEngine(history);
+    const timeline = new TimelineEngine(history.events, {
+      mode: state.snapshot?.mode ?? 'adaptive',
+      speed: state.snapshot?.speed ?? 1,
+      chapters,
+      highlights,
+    });
+    timeline.seekToProgress(state.snapshot?.progress ?? 0);
+    const snapshot = timeline.getSnapshot();
+    const currentState = getViewState(
+      replayEngine,
+      snapshot.eventIndex,
+      policy.maxDepth,
+      policy.maxNodes,
+    );
+
+    set({
+      granularityChoice,
+      effectiveGranularity: policy.granularity,
+      maxDepth: policy.maxDepth,
+      maxNodes: policy.maxNodes,
+      largeRepoActive: policy.active,
+      history,
+      replayEngine,
+      timeline,
+      snapshot,
+      currentState,
+      chapters,
+      highlights,
+    });
+  },
+
   resetToLanding() {
     get().timeline?.pause();
     set({
+      rawHistory: null,
       history: null,
       replayEngine: null,
       timeline: null,
@@ -169,6 +287,7 @@ export const useStoryStore = create<StoryStoreState>((set, get) => ({
       chapters: [],
       highlights: [],
       narration: [],
+      largeRepoActive: false,
       error: null,
       fromCache: false,
       sharedRepoId: null,
@@ -198,11 +317,14 @@ export const useStoryStore = create<StoryStoreState>((set, get) => ({
   setExportModalOpen: (exportModalOpen) => set({ exportModalOpen }),
 
   play() {
-    const { timeline, replayEngine } = get();
+    const { timeline, replayEngine, maxDepth, maxNodes } = get();
     if (!timeline || !replayEngine) return;
     timeline.play();
     const snapshot = timeline.getSnapshot();
-    set({ snapshot, currentState: replayEngine.getStateAt(snapshot.eventIndex) });
+    set({
+      snapshot,
+      currentState: getViewState(replayEngine, snapshot.eventIndex, maxDepth, maxNodes),
+    });
   },
 
   pause() {
@@ -213,20 +335,22 @@ export const useStoryStore = create<StoryStoreState>((set, get) => ({
   },
 
   togglePlay() {
-    const { timeline, replayEngine } = get();
+    const { timeline, replayEngine, maxDepth, maxNodes } = get();
     if (!timeline || !replayEngine) return;
     timeline.toggle();
     const snapshot = timeline.getSnapshot();
-    set({ snapshot, currentState: replayEngine.getStateAt(snapshot.eventIndex) });
+    set({
+      snapshot,
+      currentState: getViewState(replayEngine, snapshot.eventIndex, maxDepth, maxNodes),
+    });
   },
 
   tick(dtMs) {
-    const { timeline, replayEngine, botVisibility, history } = get();
+    const { timeline, replayEngine, botVisibility, history, maxDepth, maxNodes } = get();
     if (!timeline || !replayEngine) return;
     const prevIdx = timeline.getSnapshot().eventIndex;
     let snapshot = timeline.tick(dtMs);
 
-    // Optionally skip bot-authored commits during playback when hideBots is active
     if (
       botVisibility === 'hide' &&
       history &&
@@ -246,57 +370,75 @@ export const useStoryStore = create<StoryStoreState>((set, get) => ({
 
     const currentState =
       snapshot.eventIndex !== prevIdx
-        ? replayEngine.getStateAt(snapshot.eventIndex)
+        ? getViewState(replayEngine, snapshot.eventIndex, maxDepth, maxNodes)
         : get().currentState;
     set({ snapshot, currentState });
   },
 
   seekToProgress(p) {
-    const { timeline, replayEngine } = get();
+    const { timeline, replayEngine, maxDepth, maxNodes } = get();
     if (!timeline || !replayEngine) return;
     timeline.seekToProgress(p);
     const snapshot = timeline.getSnapshot();
-    set({ snapshot, currentState: replayEngine.getStateAt(snapshot.eventIndex) });
+    set({
+      snapshot,
+      currentState: getViewState(replayEngine, snapshot.eventIndex, maxDepth, maxNodes),
+    });
   },
 
   seekToIndex(idx) {
-    const { timeline, replayEngine } = get();
+    const { timeline, replayEngine, maxDepth, maxNodes } = get();
     if (!timeline || !replayEngine) return;
     timeline.seekToIndex(idx);
     const snapshot = timeline.getSnapshot();
-    set({ snapshot, currentState: replayEngine.getStateAt(snapshot.eventIndex) });
+    set({
+      snapshot,
+      currentState: getViewState(replayEngine, snapshot.eventIndex, maxDepth, maxNodes),
+    });
   },
 
   stepIndex(delta) {
-    const { timeline, replayEngine } = get();
+    const { timeline, replayEngine, maxDepth, maxNodes } = get();
     if (!timeline || !replayEngine) return;
     timeline.stepIndex(delta);
     const snapshot = timeline.getSnapshot();
-    set({ snapshot, currentState: replayEngine.getStateAt(snapshot.eventIndex) });
+    set({
+      snapshot,
+      currentState: getViewState(replayEngine, snapshot.eventIndex, maxDepth, maxNodes),
+    });
   },
 
   jumpToChapter(idx) {
-    const { timeline, replayEngine } = get();
+    const { timeline, replayEngine, maxDepth, maxNodes } = get();
     if (!timeline || !replayEngine) return;
     timeline.jumpToChapter(idx);
     const snapshot = timeline.getSnapshot();
-    set({ snapshot, currentState: replayEngine.getStateAt(snapshot.eventIndex) });
+    set({
+      snapshot,
+      currentState: getViewState(replayEngine, snapshot.eventIndex, maxDepth, maxNodes),
+    });
   },
 
   nextChapter() {
-    const { timeline, replayEngine } = get();
+    const { timeline, replayEngine, maxDepth, maxNodes } = get();
     if (!timeline || !replayEngine) return;
     timeline.nextChapter();
     const snapshot = timeline.getSnapshot();
-    set({ snapshot, currentState: replayEngine.getStateAt(snapshot.eventIndex) });
+    set({
+      snapshot,
+      currentState: getViewState(replayEngine, snapshot.eventIndex, maxDepth, maxNodes),
+    });
   },
 
   prevChapter() {
-    const { timeline, replayEngine } = get();
+    const { timeline, replayEngine, maxDepth, maxNodes } = get();
     if (!timeline || !replayEngine) return;
     timeline.prevChapter();
     const snapshot = timeline.getSnapshot();
-    set({ snapshot, currentState: replayEngine.getStateAt(snapshot.eventIndex) });
+    set({
+      snapshot,
+      currentState: getViewState(replayEngine, snapshot.eventIndex, maxDepth, maxNodes),
+    });
   },
 
   setSpeed(speed) {
@@ -307,10 +449,13 @@ export const useStoryStore = create<StoryStoreState>((set, get) => ({
   },
 
   setPacingMode(mode) {
-    const { timeline, replayEngine } = get();
+    const { timeline, replayEngine, maxDepth, maxNodes } = get();
     if (!timeline || !replayEngine) return;
     timeline.setMode(mode);
     const snapshot = timeline.getSnapshot();
-    set({ snapshot, currentState: replayEngine.getStateAt(snapshot.eventIndex) });
+    set({
+      snapshot,
+      currentState: getViewState(replayEngine, snapshot.eventIndex, maxDepth, maxNodes),
+    });
   },
 }));

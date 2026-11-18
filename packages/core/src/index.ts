@@ -21,3 +21,11 @@ export {
 } from './replay.js';
 export { buildChapters, detectHighlights } from './highlights.js';
 export { TemplateNarrationProvider } from './narration.js';
+export {
+  aggregateHistory,
+  collapseRepoState,
+  resolveLargeRepoPolicy,
+  type AggregationGranularity,
+  type LargeRepoOptions,
+  type ResolvedLargeRepoPolicy,
+} from './large-repo.js';

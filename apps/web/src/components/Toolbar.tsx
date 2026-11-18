@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { buildShareUrl, type BotVisibility, type ViewMode } from '../lib/urlState.js';
-import { useStoryStore } from '../store/useStoryStore.js';
+import { useStoryStore, type GranularityChoice } from '../store/useStoryStore.js';
 
 const VIEWS: Array<{ id: ViewMode; label: string }> = [
   { id: 'replay', label: 'Replay' },
@@ -23,6 +23,10 @@ export function Toolbar({ showExportButton = false }: { showExportButton?: boole
   const botVisibility = useStoryStore((s) => s.botVisibility);
   const showLabels = useStoryStore((s) => s.showLabels);
   const showCaptions = useStoryStore((s) => s.showCaptions);
+  const largeRepoActive = useStoryStore((s) => s.largeRepoActive);
+  const granularityChoice = useStoryStore((s) => s.granularityChoice);
+  const effectiveGranularity = useStoryStore((s) => s.effectiveGranularity);
+  const maxNodes = useStoryStore((s) => s.maxNodes);
 
   const setView = useStoryStore((s) => s.setView);
   const resetToLanding = useStoryStore((s) => s.resetToLanding);
@@ -32,6 +36,7 @@ export function Toolbar({ showExportButton = false }: { showExportButton?: boole
   const setShowLabels = useStoryStore((s) => s.setShowLabels);
   const setShowCaptions = useStoryStore((s) => s.setShowCaptions);
   const setExportModalOpen = useStoryStore((s) => s.setExportModalOpen);
+  const setLargeRepoOptions = useStoryStore((s) => s.setLargeRepoOptions);
 
   if (!history) return null;
 
@@ -65,6 +70,11 @@ export function Toolbar({ showExportButton = false }: { showExportButton?: boole
           </span>
           <span data-testid="repo-name">{history.repo.name}</span>
           {fromCache && <span className="pill pill-emerald">Cached</span>}
+          {largeRepoActive && (
+            <span className="pill pill-amber" title={`Aggregated by ${effectiveGranularity}`}>
+              Large Repo ({effectiveGranularity})
+            </span>
+          )}
         </div>
       </div>
 
@@ -158,6 +168,36 @@ export function Toolbar({ showExportButton = false }: { showExportButton?: boole
               <option value="dim">Dim bots</option>
               <option value="hide">Skip bots</option>
               <option value="show">Show normally</option>
+            </select>
+          </label>
+          <hr style={{ border: 'none', borderTop: '1px solid #24324a', margin: '0.2rem 0' }} />
+          <strong style={{ fontSize: '0.85rem' }}>Large-Repo Scaling</strong>
+          <label>
+            <span>Aggregation</span>
+            <select
+              className="select-input"
+              value={granularityChoice}
+              onChange={(e) =>
+                setLargeRepoOptions({ granularityChoice: e.target.value as GranularityChoice })
+              }
+            >
+              <option value="auto">Auto</option>
+              <option value="commit">Every commit</option>
+              <option value="day">By day</option>
+              <option value="week">By week</option>
+            </select>
+          </label>
+          <label>
+            <span>Node cap</span>
+            <select
+              className="select-input"
+              value={maxNodes}
+              onChange={(e) => setLargeRepoOptions({ maxNodes: Number(e.target.value) })}
+            >
+              <option value={500}>500 nodes</option>
+              <option value={1500}>1,500 nodes</option>
+              <option value={5000}>5,000 nodes</option>
+              <option value={20000}>20,000 nodes</option>
             </select>
           </label>
         </aside>

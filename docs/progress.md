@@ -17,3 +17,4 @@ One line per completed Bolt (plus Inception milestones and performance benchmark
 | Bolt-U10 | U10 | Done | 2026-11-18 | IndexedDB LRU cache (`idb`) keyed by repo+HEAD+options + dedicated Vite Web Worker offloading (`history.worker.ts`) (40 tests passing) |
 | Bolt-U8 | U8 | Done | 2026-11-18 | Animated squarified Treemap layout (`d3-hierarchy`) + `TreemapView` synchronized with timeline & palette (42 tests passing) |
 | Bolt-U9 | U9 | Done | 2026-11-18 | Contributor activity canvas (avatars gravitating toward touched files) + interactive centered streamgraph with bot filtering (45 tests passing) |
+| Bolt-U11 | U11 | Done | 2026-11-18 | Large-repo scaling (day/week aggregation, depth collapse, node cap) + UI controls; **Bench:** 5k commits: agg 5.0ms, index 23.6ms, avg frame 3.76ms; 10k commits: agg 7.8ms, index 3.2ms, avg frame 4.45ms (48 tests passing) |
