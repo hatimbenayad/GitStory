@@ -33,7 +33,22 @@ importers:
         specifier: ^3.0.4
         version: 3.2.7(@types/node@22.20.5)
 
+  apps/cli:
+    dependencies:
+      '@gitstory/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@gitstory/extractor':
+        specifier: workspace:*
+        version: link:../../packages/extractor
+
   packages/core: {}
+
+  packages/extractor:
+    dependencies:
+      '@gitstory/core':
+        specifier: workspace:*
+        version: link:../core
 
 packages:
 
