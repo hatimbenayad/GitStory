@@ -1,0 +1,9 @@
+# Tasks: U2 — Git Extractor & CLI `history.json` Output
+
+- [ ] T2.1 Initialize `packages/extractor` and `apps/cli` package configs
+- [ ] T2.2 [P] Write failing unit tests for bot detection (`bot.test.ts`), mailmap (`mailmap.test.ts`), and streaming parser (`stream-parser.test.ts` including renames, copies, binary, spaces/quotes/unicode, chunk splitting mid-token)
+- [ ] T2.3 [P] Write failing integration tests using programmatically created temporary Git fixture repos (empty repo, single commit, renames, merges first-parent vs full, `.mailmap`, annotated & lightweight tags, detached HEAD, bots, binary files, weird filenames)
+- [ ] T2.4 Implement `bot.ts`, `mailmap.ts`, `stream-parser.ts`, and `git-extractor.ts`
+- [ ] T2.5 Implement `apps/cli` (`extract` and `serve` commands + bin entry) and CLI integration test
+- [ ] T2.6 Verify lint, typecheck, tests, build, and run CLI on GitStory repo itself
+- [ ] T2.7 Update `docs/progress.md`, commit Bolt U2, and push to origin
