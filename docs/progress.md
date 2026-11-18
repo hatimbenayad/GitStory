@@ -15,3 +15,4 @@ One line per completed Bolt (plus Inception milestones and performance benchmark
 | Bolt-U6 | U6 | Done | 2026-11-18 | MVP complete! React+Vite+Zustand web shell, drag-drop `history.json`, File System Access API local folder loader, HUD, timeline controls, keyboard shortcuts, shareable URLs (34 tests passing) |
 | Bolt-U7 | U7 | Done | 2026-11-18 | Documentary highlight detection (all 5 categories), tag chapters, opt-in zero-key `TemplateNarrationProvider` wired into timeline pacing & HUD (37 tests passing) |
 | Bolt-U10 | U10 | Done | 2026-11-18 | IndexedDB LRU cache (`idb`) keyed by repo+HEAD+options + dedicated Vite Web Worker offloading (`history.worker.ts`) (40 tests passing) |
+| Bolt-U8 | U8 | Done | 2026-11-18 | Animated squarified Treemap layout (`d3-hierarchy`) + `TreemapView` synchronized with timeline & palette (42 tests passing) |

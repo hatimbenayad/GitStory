@@ -12,3 +12,4 @@ export {
   type LayoutNode,
   type TreeLayoutFrame,
 } from './tree-layout.js';
+export { computeTreemapLayout, type TreemapRect } from './treemap-layout.js';

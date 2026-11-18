@@ -4,6 +4,7 @@ import { LandingView } from './components/LandingView.js';
 import { ReplayView } from './components/ReplayView.js';
 import { TimelineBar } from './components/TimelineBar.js';
 import { Toolbar } from './components/Toolbar.js';
+import { TreemapView } from './components/TreemapView.js';
 import { processHistoryAsync } from './lib/historyProcessor.js';
 import { useStoryStore } from './store/useStoryStore.js';
 
@@ -81,7 +82,8 @@ export function App() {
       <Toolbar />
       <main className="stage-wrapper">
         {view === 'replay' && <ReplayView />}
-        {view !== 'replay' && (
+        {view === 'treemap' && <TreemapView />}
+        {view !== 'replay' && view !== 'treemap' && (
           <div
             style={{
               height: '100%',
