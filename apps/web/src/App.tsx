@@ -8,6 +8,7 @@ import { TimelineBar } from './components/TimelineBar.js';
 import { Toolbar } from './components/Toolbar.js';
 import { TreemapView } from './components/TreemapView.js';
 import { processHistoryAsync } from './lib/historyProcessor.js';
+import { parseUrlState } from './lib/urlState.js';
 import { useStoryStore } from './store/useStoryStore.js';
 
 export function App() {
@@ -37,9 +38,54 @@ export function App() {
     [loadHistoryObject, setError, setLoading],
   );
 
-  // Auto-preload `/api/history.json` when launched via `gitstory serve` (FR-2)
+  const handleLoadGitHubUrl = useCallback(
+    async (url: string, apiBase: string) => {
+      const base = apiBase.replace(/\/+$/, '');
+      setLoading(true, 'Cloning public repo via optional backend (--filter=blob:none)...');
+      try {
+        const res = await fetch(`${base}/api/repos`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, firstParent: true }),
+        });
+        const body = (await res.json()) as { id?: string; history?: unknown; error?: string };
+        if (!res.ok || !body.history) {
+          throw new Error(body.error ?? `Backend returned HTTP ${res.status}`);
+        }
+        await handleLoadRaw(body.history, { sharedRepoId: body.id ?? null });
+      } catch (err) {
+        setError(err instanceof Error ? err.message : String(err));
+      }
+    },
+    [handleLoadRaw, setError, setLoading],
+  );
+
+  // Auto-preload `/api/history.json` (CLI serve) or `?repo=<id>` (optional backend)
   useEffect(() => {
     let cancelled = false;
+    const urlState = parseUrlState(window.location.search);
+    const apiBase = ((import.meta.env.VITE_API_BASE_URL as string | undefined) ?? '').replace(
+      /\/+$/,
+      '',
+    );
+
+    if (urlState.repo && apiBase) {
+      void fetch(`${apiBase}/api/repos/${encodeURIComponent(urlState.repo)}/history`)
+        .then(async (res) => {
+          if (!res.ok) return;
+          const data: unknown = await res.json();
+          if (!cancelled) {
+            await handleLoadRaw(data, { sharedRepoId: urlState.repo ?? null });
+          }
+        })
+        .catch(() => {
+          // ignore offline backend
+        });
+      return () => {
+        cancelled = true;
+      };
+    }
+
     void fetch('/api/history.json')
       .then(async (res) => {
         if (!res.ok) return;
@@ -76,7 +122,9 @@ export function App() {
   }, [playing, tick]);
 
   if (!history) {
-    return <LandingView onLoadRawJson={handleLoadRaw} />;
+    return (
+      <LandingView onLoadRawJson={handleLoadRaw} onLoadGitHubUrl={handleLoadGitHubUrl} />
+    );
   }
 
   return (

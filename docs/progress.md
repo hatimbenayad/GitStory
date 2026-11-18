@@ -19,3 +19,4 @@ One line per completed Bolt (plus Inception milestones and performance benchmark
 | Bolt-U9 | U9 | Done | 2026-11-18 | Contributor activity canvas (avatars gravitating toward touched files) + interactive centered streamgraph with bot filtering (45 tests passing) |
 | Bolt-U11 | U11 | Done | 2026-11-18 | Large-repo scaling (day/week aggregation, depth collapse, node cap) + UI controls; **Bench:** 5k commits: agg 5.0ms, index 23.6ms, avg frame 3.76ms; 10k commits: agg 7.8ms, index 3.2ms, avg frame 4.45ms (48 tests passing) |
 | Bolt-U12 | U12 | Done | 2026-11-18 | `@gitstory/exporter` (WebCodecs H.264 + `mp4-muxer` MP4, pure-TS `gifenc` GIF89a, `AbortSignal` cancellation) + `ExportModal` with HUD burn-in (51 tests passing) |
+| Bolt-U13 | U13 | Done | 2026-11-18 | Optional Node+Hono backend (`apps/server`) with strict GitHub HTTPS allowlist, blobless `--filter=blob:none --no-checkout` clone, disk cache, share links & web app opt-in integration (54 tests passing) |
