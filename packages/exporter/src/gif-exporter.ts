@@ -1,5 +1,17 @@
-import { GIFEncoder, applyPalette, quantize } from 'gifenc';
+import * as gifencNs from 'gifenc';
 import { ExportCancelledError, extractRgbaBuffer, type ExportOptions, type FrameRenderer } from './types.js';
+
+type GifencApi = {
+  GIFEncoder: typeof gifencNs.GIFEncoder;
+  applyPalette: typeof gifencNs.applyPalette;
+  quantize: typeof gifencNs.quantize;
+};
+
+const gifencModule: GifencApi =
+  typeof gifencNs.GIFEncoder === 'function'
+    ? (gifencNs as unknown as GifencApi)
+    : (gifencNs as unknown as { default: GifencApi }).default;
+const { GIFEncoder, applyPalette, quantize } = gifencModule;
 
 /**
  * Encodes deterministic frames into an animated GIF89a `Blob` using pure-TS `gifenc`.

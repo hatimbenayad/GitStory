@@ -1,7 +1,13 @@
 import { useRef, useState, type DragEvent } from 'react';
-import { isLocalFolderSupported, loadHistoryFromLocalFolder } from '../lib/localFolderLoader.js';
 import { createSampleHistory } from '../lib/sampleHistory.js';
 import { useStoryStore } from '../store/useStoryStore.js';
+
+function isLocalFolderSupported(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    typeof (window as Window & { showDirectoryPicker?: unknown }).showDirectoryPicker === 'function'
+  );
+}
 
 export interface LandingViewProps {
   onLoadRawJson: (raw: unknown, meta?: { sharedRepoId?: string | null }) => void | Promise<void>;
@@ -45,6 +51,7 @@ export function LandingView({ onLoadRawJson, onLoadGitHubUrl }: LandingViewProps
     setError(null);
     setLoading(true, 'Reading local Git repository (stays 100% in your browser)...');
     try {
+      const { loadHistoryFromLocalFolder } = await import('../lib/localFolderLoader.js');
       const history = await loadHistoryFromLocalFolder();
       await onLoadRawJson(history);
     } catch (err) {
