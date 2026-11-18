@@ -1,9 +1,10 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { HudOverlay } from './components/HudOverlay.js';
 import { LandingView } from './components/LandingView.js';
 import { ReplayView } from './components/ReplayView.js';
 import { TimelineBar } from './components/TimelineBar.js';
 import { Toolbar } from './components/Toolbar.js';
+import { processHistoryAsync } from './lib/historyProcessor.js';
 import { useStoryStore } from './store/useStoryStore.js';
 
 export function App() {
@@ -11,7 +12,27 @@ export function App() {
   const view = useStoryStore((s) => s.view);
   const playing = useStoryStore((s) => s.snapshot?.playing ?? false);
   const loadHistoryObject = useStoryStore((s) => s.loadHistoryObject);
+  const setLoading = useStoryStore((s) => s.setLoading);
+  const setError = useStoryStore((s) => s.setError);
   const tick = useStoryStore((s) => s.tick);
+
+  const handleLoadRaw = useCallback(
+    async (raw: unknown, meta?: { sharedRepoId?: string | null }) => {
+      setLoading(true, 'Analyzing commits & highlights in background worker...');
+      try {
+        const result = await processHistoryAsync(raw);
+        loadHistoryObject(result.history, {
+          fromCache: result.fromCache,
+          chapters: result.chapters,
+          highlights: result.highlights,
+          sharedRepoId: meta?.sharedRepoId ?? null,
+        });
+      } catch (err) {
+        setError(err instanceof Error ? err.message : String(err));
+      }
+    },
+    [loadHistoryObject, setError, setLoading],
+  );
 
   // Auto-preload `/api/history.json` when launched via `gitstory serve` (FR-2)
   useEffect(() => {
@@ -23,7 +44,7 @@ export function App() {
         if (!contentType.includes('application/json')) return;
         const data: unknown = await res.json();
         if (!cancelled) {
-          loadHistoryObject(data);
+          await handleLoadRaw(data);
         }
       })
       .catch(() => {
@@ -32,7 +53,7 @@ export function App() {
     return () => {
       cancelled = true;
     };
-  }, [loadHistoryObject]);
+  }, [handleLoadRaw]);
 
   // Virtual clock animation loop
   useEffect(() => {
@@ -52,13 +73,7 @@ export function App() {
   }, [playing, tick]);
 
   if (!history) {
-    return (
-      <LandingView
-        onLoadRawJson={(raw, meta) => {
-          loadHistoryObject(raw, meta);
-        }}
-      />
-    );
+    return <LandingView onLoadRawJson={handleLoadRaw} />;
   }
 
   return (
